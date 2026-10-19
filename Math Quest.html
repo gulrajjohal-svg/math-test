@@ -1,0 +1,132 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Math Quest</title>
+<style>
+:root{--bg:#fff6e8;--card:#fff;--ink:#2b2150;--mute:#6b6590;--pri:#6c4cf5;--good:#1fa971;--bad:#e5484d;--line:#eadcc6;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171330;--card:#241e4a;--ink:#f3efff;--mute:#a9a2d4;--pri:#9b82ff;--line:#3a3270;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#171330;--card:#241e4a;--ink:#f3efff;--mute:#a9a2d4;--pri:#9b82ff;--line:#3a3270;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Trebuchet MS",ui-rounded,system-ui,sans-serif;min-height:100vh}
+#app{max-width:560px;margin:0 auto;padding:16px}
+h1{margin:6px 0 2px;font-size:2rem}.mute{color:var(--mute);margin:0 0 10px}
+.lv{display:flex;gap:8px;margin:12px 0}.lv button,.ghost,.btn{font:inherit;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:8px 14px;cursor:pointer;font-weight:700}
+.lv button{flex:1}.lv .on{background:var(--pri);border-color:var(--pri);color:#fff}
+.btn{background:var(--pri);border-color:var(--pri);color:#fff;padding:12px 20px;font-size:1.05rem}
+.menu{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.gc{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:14px;text-align:left;font:inherit;color:var(--ink);cursor:pointer;transition:transform .15s}
+.gc:hover{transform:translateY(-3px)}.gc .e{font-size:2rem}.gc b{display:block}.gc small{color:var(--mute)}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}#sc{font-size:1.4rem;font-weight:800;color:var(--pri)}
+.tm{height:10px;background:var(--line);border-radius:9px;overflow:hidden;margin-bottom:12px}.tm i{display:block;height:100%;width:100%;background:var(--pri)}
+.card{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:20px;min-height:320px;text-align:center}
+.card.good{animation:g .3s}.card.bad{animation:b .3s}
+@keyframes g{50%{background:color-mix(in srgb,var(--good) 25%,var(--card))}}
+@keyframes b{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}50%{background:color-mix(in srgb,var(--bad) 25%,var(--card))}}
+.big{font-size:2.2rem;font-weight:800;margin:14px 0 20px}
+input{font:inherit;font-size:2rem;width:60%;text-align:center;padding:10px;border-radius:14px;border:3px solid var(--pri);background:var(--bg);color:var(--ink)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt{font:inherit;font-size:1.5rem;font-weight:800;color:#fff;border:0;border-radius:16px;padding:18px 8px;cursor:pointer}
+.c0{background:#e5484d}.c1{background:#c26a00}.c2{background:#0d9488}.c3{background:#2563eb}.c4{background:#7c3aed}
+.opt.x{opacity:.3}.opt.on{outline:4px solid var(--ink)}
+.balloons .opt{border-radius:50% 50% 50% 50%/58% 58% 42% 42%;padding:30px 8px;animation:bob 2.4s ease-in-out infinite}
+.balloons .opt:nth-child(2){animation-delay:-.6s}.balloons .opt:nth-child(3){animation-delay:-1.2s}.balloons .opt:nth-child(4){animation-delay:-1.8s}
+@keyframes bob{50%{transform:translateY(-8px)}}
+.grid4{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.grid5{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mem{font:inherit;font-size:1.2rem;font-weight:800;height:72px;border-radius:14px;border:2px solid var(--line);background:var(--pri);color:#fff;cursor:pointer}
+.mem.up{background:var(--card);color:var(--ink);border-color:var(--pri)}.mem.done{background:var(--good);color:#fff;opacity:.6}
+.stars{font-size:2.6rem;margin:8px 0}.res{padding-top:30px}
+.lv{flex-wrap:wrap}.lv button{flex:1 0 44px;padding:8px 4px}
+.mem{font-size:1.05rem;overflow:hidden;line-height:1.15}.opt{transition:transform .1s}.opt:active{transform:scale(.92)}
+body{background-image:radial-gradient(circle at 10% 0,color-mix(in srgb,var(--pri) 20%,transparent),transparent 45%)}
+.balloons{padding:10px;border-radius:16px;background:linear-gradient(#8ccfff55,transparent)}
+.fx{position:fixed;pointer-events:none;font-size:2rem;font-weight:800;z-index:9;animation:fly 1s forwards}@keyframes fly{to{transform:translateY(-130px) scale(1.6) rotate(20deg);opacity:0}}
+</style></head><body><div id="app"></div>
+<script>
+const $=s=>document.querySelector(s),R=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,P=a=>a[R(0,a.length-1)],S=a=>a.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+let LV=0,store={},sc,stk,left,tmr,cur,bd;
+try{store=JSON.parse(localStorage.getItem('mq2')||'{}')}catch(e){}
+const save=()=>{try{localStorage.setItem('mq2',JSON.stringify(store))}catch(e){}};
+const GN=['Kindergarten','Year 1','Year 2','Year 3','Year 4','Year 5','Year 6','Year 7','Year 8','Year 9'];
+const K=()=>LV<2?5:LV<5?9:12,SP=()=>Math.max(3,LV+2);
+function expr(pl){const F=n=>LV?n:'🍎'.repeat(n),m=[3,6,12,50,100,200,500,60,100,200][LV],Q=p=>Math.random()<p;let a,b;
+ if(LV>8&&!pl&&Q(.2)){const p=P([10,20,50]),n=p==10?R(1,10)*10:p==20?R(1,10)*5:R(1,25)*2;return{t:`${p}% of ${n}`,a:n*p/100}}
+ if(LV>7&&!pl&&Q(.25)){const x=R(2,12),k=R(2,9),c=R(1,20);return{t:`If ${k}x + ${c} = ${k*x+c}, x`,a:x}}
+ if(LV>7&&Q(.15)){a=R(2,15);return{t:a+'²',a:a*a}}
+ if(LV>6&&Q(.25)){a=R(2,9);b=R(2,9);const c=R(2,9);return{t:`${a} + ${b} × ${c}`,a:a+b*c}}
+ if(LV>2&&Q(.4)){a=R(2,K());b=R(2,K());return LV>4&&Q(.4)?{t:`${a*b} ÷ ${b}`,a}:{t:`${a} × ${b}`,a:a*b}}
+ a=R(1,m);b=R(1,m);
+ if(Q(.5))return{t:`${F(a)} + ${F(b)}`,a:a+b};
+ if(LV<7&&b>a)[a,b]=[b,a];return{t:`${F(a)} − ${F(b)}`,a:a-b}}
+function choices(a,n=4){const s=new Set([a]);while(s.size<n){const v=a+P([-1,1])*R(1,SP());if(v>=0||LV>6)s.add(v)}return S([...s])}
+const flash=c=>{bd.classList.remove('good','bad');void bd.offsetWidth;bd.classList.add(c)};
+let AC;const beep=(f,d=.12,t='sine')=>{try{AC=AC||new AudioContext();const o=AC.createOscillator(),g=AC.createGain();o.type=t;o.frequency.value=f;g.gain.value=.07;o.connect(g);g.connect(AC.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.stop(AC.currentTime+d)}catch(e){}};
+const fx=(e,n=3)=>{for(let i=0;i<n;i++){const s=document.createElement('span');s.className='fx';s.textContent=e;s.style.left=R(10,85)+'vw';s.style.top=R(30,65)+'vh';document.body.append(s);setTimeout(()=>s.remove(),1000)}};
+const upd=()=>{$('#sc').textContent=(stk>1?'🔥'+stk+' ':'')+sc};
+const good=()=>{stk++;sc+=10+Math.min(stk,5)*2;upd();flash('good');beep(520+stk*40);fx(P(['⭐','✨','🎉','🌟']),stk>2?5:2);if(stk%5==0){left=Math.min(cur.t+5,left+3);fx('⏱️ +3s',1)}};
+const bad=()=>{stk=0;sc=Math.max(0,sc-5);upd();flash('bad');beep(160,.25,'sawtooth')};
+
+const games=[
+{id:'blitz',n:'Speed Blitz',i:'⚡',d:'Type answers fast',t:30,st:[60,150,250],f:blitz},
+{id:'balloon',n:'Balloon Pop',i:'🎈',d:'Pop the right answer',t:30,st:[60,150,250],f:b=>mc(b,()=>{const e=expr(),o=choices(e.a);return{q:e.t+' = ?',o,a:o.indexOf(e.a)}},'balloons')},
+{id:'seq',n:'Pattern Hunt',i:'🔍',d:'Find the missing number',t:40,st:[60,150,250],f:b=>mc(b,seq,'')},
+{id:'mem',n:'Memory Match',i:'🧠',d:'Pair sums with answers',t:60,st:[80,130,180],f:memory},
+{id:'target',n:'Make the Target',i:'🎯',d:'Add tiles to hit the goal',t:40,st:[60,140,220],f:target},
+{id:'big',n:'Bigger Beats',i:'⚖️',d:'Tap the larger one',t:25,st:[60,140,220],f:b=>mc(b,()=>{let x,y;do{x=expr(1);y=expr(1)}while(x.a==y.a);return{q:'Which is bigger?',o:[x.t,y.t],a:x.a>y.a?0:1}},'')},
+{id:'mult',n:'Multiples Hunt',i:'🔦',d:'Tap every multiple',t:30,st:[100,200,300],f:mult},
+{id:'tf',n:'True or False',i:'✅',d:'Is the equation right?',t:25,st:[60,140,220],f:b=>mc(b,()=>{const e=expr(),ok=Math.random()<.5,v=ok?e.a:Math.max(0,e.a+P([-1,1])*R(1,3));const t=v==e.a;return{q:`${e.t} = ${v}`,o:['✔ True','✘ False'],a:t?0:1}},'')}
+];
+
+function home(){clearInterval(tmr);
+ const tot=games.reduce((s,g)=>s+((store[g.id+LV]||{}).s||0),0);
+ $('#app').innerHTML=`<h1>🚀 Math Quest</h1><p class=mute>8 mini games · ⭐ ${tot}/24 · <b>${GN[LV]}</b></p>
+ <p class=mute style="margin:0">Pick your grade (K–9) 👇</p><div class=lv>${GN.map((n,i)=>`<button class="${LV==i?'on':''}" data-l=${i}>${i||'K'}</button>`).join('')}</div>
+ <div class=menu>${games.map((g,i)=>{const b=store[g.id+LV]||{s:0,b:0};return`<button class=gc data-g=${i}><span class=e>${g.i}</span><b>${g.n}</b><small>${g.d}</small><br><small>${'⭐'.repeat(b.s)}${'☆'.repeat(3-b.s)} · best ${b.b}</small></button>`}).join('')}</div>`;
+ document.querySelectorAll('.lv button').forEach(b=>b.onclick=()=>{LV=+b.dataset.l;home()});
+ document.querySelectorAll('.gc').forEach(b=>b.onclick=()=>run(games[+b.dataset.g]));}
+
+function run(g){cur=g;sc=0;stk=0;left=g.t;clearInterval(tmr);
+ $('#app').innerHTML=`<div class=bar><button class=ghost id=bk>← Menu</button><b>${g.i} ${g.n}</b><span id=sc>0</span></div><div class=tm><i id=tb></i></div><div id=bd class=card></div>`;
+ bd=$('#bd');$('#bk').onclick=home;
+ tmr=setInterval(()=>{left-=.1;$('#tb').style.width=Math.max(0,left/g.t*100)+'%';if(left<=0)end()},100);
+ g.f(bd);}
+
+function end(){clearInterval(tmr);const g=cur,s=g.st.filter(t=>sc>=t).length,o=store[g.id+LV]||{s:0,b:0},nb=sc>o.b;
+ store[g.id+LV]={s:Math.max(s,o.s),b:Math.max(sc,o.b)};save();if(s>0){for(let i=0;i<6+s*3;i++)fx(P(['🎉','⭐','🎊','✨']),1);beep(880,.35)}
+ $('#app').innerHTML=`<div class="card res"><div class=big>${s==3?'Amazing!':s?'Nice work!':'Good try!'}</div><div class=stars>${'⭐'.repeat(s)}${'☆'.repeat(3-s)}</div><p class=big style="margin:0">${sc} points</p><p class=mute>${nb&&sc?'🎉 New best score!':'Best: '+store[g.id+LV].b}</p><button class=btn id=again>Play again</button> <button class=ghost id=hm>Menu</button></div>`;
+ $('#again').onclick=()=>run(g);$('#hm').onclick=home;}
+
+function blitz(b){let q;b.innerHTML='<div class=big id=q></div><input id=in type=number inputmode=numeric autocomplete=off>';
+ const i=$('#in'),nx=()=>{q=expr();$('#q').textContent=q.t+' = ?';i.value=''};
+ i.oninput=()=>{const v=i.value;if(v!==''&&+v===q.a){good();nx()}else if(v.length>=String(q.a).length){bad();i.value=''}};nx();i.focus();}
+
+function mc(b,gen,cls){const nx=()=>{const g=gen();
+ b.innerHTML=`<div class=big>${g.q}</div><div class="opts ${cls}">${g.o.map((o,i)=>`<button class="opt c${i%5}" data-i=${i}>${o}</button>`).join('')}</div>`;
+ b.querySelectorAll('.opt').forEach(x=>x.onclick=()=>{if(+x.dataset.i===g.a){good();nx()}else{bad();x.disabled=true;x.classList.add('x')}})};nx();}
+
+function seq(){const k=R(0,LV>2?2:1),s=R(1,10),d=R(1,LV+2),a=[];
+ for(let i=0;i<5;i++)a.push(k==0?s+d*i:k==1?s+d*5-d*i:Math.max(1,s%5+1)*2**i);
+ const h=R(1,4),ans=a[h],o=choices(ans);return{q:a.map((v,i)=>i==h?'❓':v).join(', '),o,a:o.indexOf(ans)}}
+
+function memory(b){const n=6,ps=[];while(ps.length<n){const e=expr(1);if(!ps.some(p=>p.a==e.a))ps.push(e)}
+ const cs=S(ps.flatMap((p,i)=>[{k:i,l:p.t},{k:i,l:p.a}]));let sel=[],ok=0;
+ b.innerHTML=`<p class=mute>Match each sum with its answer</p><div class=grid4>${cs.map(()=>'<button class=mem><span>?</span></button>').join('')}</div>`;
+ const bs=b.querySelectorAll('.mem');
+ bs.forEach((x,i)=>x.onclick=()=>{if(sel.length>1||x.classList.contains('up')||x.classList.contains('done'))return;
+  x.classList.add('up');x.firstChild.textContent=cs[i].l;sel.push(i);
+  if(sel.length==2){const[p,q]=sel;
+   if(cs[p].k==cs[q].k)setTimeout(()=>{[p,q].forEach(j=>bs[j].classList.replace('up','done'));sel=[];good();if(++ok==n){sc+=Math.round(left);upd();end()}},300);
+   else{bad();setTimeout(()=>{[p,q].forEach(j=>{bs[j].classList.remove('up');bs[j].firstChild.textContent='?'});sel=[]},700)}}})}
+
+function target(b){let sel,t,ns;
+ const draw=()=>{const c=sel.reduce((s,i)=>s+ns[i],0);
+  b.innerHTML=`<div class=big>Make <b>${t}</b></div><p class=mute>Your sum: ${c}</p><div class=grid5>${ns.map((n,i)=>`<button class="opt c${i} ${sel.includes(i)?'on':''}" data-i=${i}>${n}</button>`).join('')}</div>`;
+  b.querySelectorAll('.opt').forEach(x=>x.onclick=()=>{const i=+x.dataset.i;sel=sel.includes(i)?sel.filter(y=>y!=i):[...sel,i];const s=sel.reduce((a,j)=>a+ns[j],0);
+   if(s==t){good();nx()}else if(s>t){bad();sel=[];draw()}else draw()})};
+ const nx=()=>{const m=4+LV*3;ns=Array.from({length:5},()=>R(1,m));t=S([0,1,2,3,4]).slice(0,R(2,3)).reduce((s,i)=>s+ns[i],0);sel=[];draw()};nx();}
+
+function mult(b){let n,found;
+ const nx=()=>{n=R(2,K());found=0;const r=LV<3?6:10,pool=[];
+  while(pool.length<5){const v=n*R(1,r);if(!pool.includes(v))pool.push(v)}
+  while(pool.length<12){const v=R(2,n*r+10);if(v%n&&!pool.includes(v))pool.push(v)}
+  b.innerHTML=`<div class=big>Tap all multiples of <b>${n}</b></div><div class=grid5>${S(pool).map(v=>`<button class="opt c${v%5}" data-v=${v}>${v}</button>`).join('')}</div>`;
+  b.querySelectorAll('.opt').forEach(x=>x.onclick=()=>{if(x.disabled)return;
+   if(+x.dataset.v%n==0){x.disabled=true;x.classList.add('x');good();if(++found==5){sc+=10;upd();nx()}}else bad()})};nx();}
+home();
+</script></body></html>
